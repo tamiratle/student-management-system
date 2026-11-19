@@ -1,0 +1,810 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <title>Student Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- ADMIN LOGIN SCREEN -->
+
+<div id="loginPage" class="login-page">
+    <div class="login-card">
+        <div class="login-logo">🎓</div>
+        <h1>Student Management System</h1>
+        <p>Administrator Login</p>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername"
+                    placeholder="Enter username"
+                    autocomplete="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword"
+                    placeholder="Enter password"
+                    autocomplete="current-password" required>
+            </div>
+
+            <p id="loginError" class="login-error"
+                role="alert" aria-live="polite"></p>
+
+            <button type="submit" class="primary-btn">Login</button>
+        </form>
+
+        <p class="login-footer">Authorized administrators only</p>
+    </div>
+</div>
+
+
+<!-- HEADER -->
+
+<header class="header">
+    <div class="header-left">
+        <button type="button" class="menu-btn" id="menuBtn"
+            aria-label="Open menu">☰</button>
+        <h1>Student Management System</h1>
+    </div>
+
+    <div class="header-right">
+        <button type="button" class="theme-btn" id="themeBtn"
+            aria-label="Toggle dark mode">🌙</button>
+
+        <div class="profile">
+            <div class="profile-avatar">TL</div>
+            <div class="profile-info">
+                <strong>Tamirat Lemma</strong>
+                <span>Administrator</span>
+            </div>
+        </div>
+
+        <button type="button" class="secondary-btn logout-btn"
+            id="logoutBtn">🚪 Logout</button>
+    </div>
+</header>
+
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <div>
+            <h2>SMS</h2>
+            <span>Management System</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-link active" data-page="dashboard">
+            <span>🏠</span><span>Dashboard</span>
+        </a>
+
+        <a href="#students" class="nav-link" data-page="students">
+            <span>👨‍🎓</span><span>Students</span>
+        </a>
+
+        <a href="#add-student" class="nav-link add-student-btn">
+            <span>➕</span><span>Add Student</span>
+        </a>
+
+        <a href="#reports" class="nav-link" data-page="reports">
+            <span>📊</span><span>Reports</span>
+        </a>
+
+        <!-- USER MANAGEMENT NAVIGATION -->
+        <a href="#users" class="nav-link"
+            data-page="users" id="usersNavLink">
+            <span>👥</span><span>User Management</span>
+        </a>
+
+        <a href="#settings" class="nav-link" data-page="settings">
+            <span>⚙️</span><span>Settings</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <p>Student Management System</p>
+        <span>Administrator Panel</span>
+    </div>
+</aside>
+
+
+<!-- MAIN CONTENT -->
+
+<main class="main-content">
+
+    <!-- DASHBOARD PAGE -->
+
+    <section id="dashboardPage" class="page-section active-page">
+
+        <div class="page-header">
+            <div>
+                <h2>Dashboard</h2>
+                <p>Welcome back, Tamirat. Here's your student overview.</p>
+            </div>
+            <button type="button" class="primary-btn add-student-btn">
+                + Add Student
+            </button>
+        </div>
+
+        <div class="welcome-banner">
+            <div class="welcome-content">
+                <span class="welcome-label">ADMINISTRATOR DASHBOARD</span>
+                <h2>Welcome back, Tamirat! 👋</h2>
+                <p>
+                    Manage your students, monitor academic information,
+                    and keep your institution organized.
+                </p>
+                <div class="welcome-actions">
+                    <button type="button" class="primary-btn add-student-btn">
+                        + Register New Student
+                    </button>
+                    <a href="#students" class="welcome-secondary-btn"
+                        data-page="students">View Students →</a>
+                </div>
+            </div>
+            <div class="welcome-illustration">🎓</div>
+        </div>
+
+        <!-- STATISTICS CARDS -->
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">👨‍🎓</div>
+                <div class="stat-content">
+                    <span>Total Students</span>
+                    <strong id="totalStudents">0</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">👨</div>
+                <div class="stat-content">
+                    <span>Male Students</span>
+                    <strong id="maleStudents">0</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon pink">👩</div>
+                <div class="stat-content">
+                    <span>Female Students</span>
+                    <strong id="femaleStudents">0</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon orange">🏫</div>
+                <div class="stat-content">
+                    <span>Total Departments</span>
+                    <strong id="totalDepartments">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+
+        <div class="quick-actions-section">
+            <div class="section-header">
+                <div>
+                    <h2>Quick Actions</h2>
+                    <p>Access important system features quickly.</p>
+                </div>
+            </div>
+
+            <div class="quick-actions-grid">
+                <button type="button" class="quick-action-card add-student-btn">
+                    <span class="quick-action-icon">➕</span>
+                    <strong>Add Student</strong>
+                    <span>Register a new student</span>
+                </button>
+
+                <a href="#students" class="quick-action-card" data-page="students">
+                    <span class="quick-action-icon">👨‍🎓</span>
+                    <strong>View Students</strong>
+                    <span>Manage student records</span>
+                </a>
+
+                <a href="#reports" class="quick-action-card" data-page="reports">
+                    <span class="quick-action-icon">📊</span>
+                    <strong>View Reports</strong>
+                    <span>Check student statistics</span>
+                </a>
+
+                <a href="#settings" class="quick-action-card" data-page="settings">
+                    <span class="quick-action-icon">⚙️</span>
+                    <strong>Settings</strong>
+                    <span>Manage system settings</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- QUICK ANALYTICS -->
+
+        <div class="analytics-section">
+            <div class="analytics-header">
+                <div>
+                    <h2>Quick Analytics</h2>
+                    <p>Overview of student distribution.</p>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <div>
+                            <h3>Gender Distribution</h3>
+                            <p>Student gender overview.</p>
+                        </div>
+                        <span class="analytics-icon">👥</span>
+                    </div>
+
+                    <div class="analytics-item">
+                        <div class="analytics-label">
+                            <span>Male</span>
+                            <strong id="dashboardMalePercentage">0%</strong>
+                        </div>
+                        <div class="analytics-bar">
+                            <div class="analytics-bar-fill male-bar"
+                                id="dashboardMaleBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-item">
+                        <div class="analytics-label">
+                            <span>Female</span>
+                            <strong id="dashboardFemalePercentage">0%</strong>
+                        </div>
+                        <div class="analytics-bar">
+                            <div class="analytics-bar-fill female-bar"
+                                id="dashboardFemaleBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <div>
+                            <h3>Department Overview</h3>
+                            <p>Students by department.</p>
+                        </div>
+                        <span class="analytics-icon">🏫</span>
+                    </div>
+
+                    <div id="dashboardDepartmentAnalytics"
+                        class="department-analytics">
+                        <div class="analytics-empty">
+                            No student data available.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+
+        <div class="students-section recent-activity-section">
+            <div class="section-header">
+                <div>
+                    <h2>📋 Recent Activity</h2>
+                    <p>Track the latest activities in your system.</p>
+                </div>
+            </div>
+
+            <div class="activity-list" id="recentActivityList">
+                <div class="activity-item">
+                    <div class="activity-icon">📋</div>
+                    <div class="activity-details">
+                        <h4>No recent activity</h4>
+                        <p>System activities will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT STUDENTS -->
+
+        <div class="students-section recent-students-section">
+            <div class="section-header">
+                <div>
+                    <h2>🕒 Recent Students</h2>
+                    <p>Latest students registered in the system.</p>
+                </div>
+                <a href="#students" class="welcome-secondary-btn"
+                    data-page="students">View All Students →</a>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentStudentsTableBody">
+                        <tr class="empty-row">
+                            <td colspan="7">No recent students found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DASHBOARD STUDENTS TABLE -->
+
+        <div class="students-section">
+            <div class="section-header">
+                <div>
+                    <h2>Students</h2>
+                    <p>Manage all registered students.</p>
+                </div>
+                <button type="button" class="primary-btn add-student-btn">
+                    + Add Student
+                </button>
+            </div>
+
+            <div class="filters-container">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="searchInput"
+                        placeholder="Search students...">
+                </div>
+
+                <select id="departmentFilter">
+                    <option value="">All Departments</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                </select>
+
+                <select id="genderFilter">
+                    <option value="">All Genders</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+
+                <select id="yearFilter">
+                    <option value="">All Years</option>
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr class="empty-row">
+                            <td colspan="7">No students found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- STUDENTS PAGE -->
+
+    <section id="studentsPage" class="page-section">
+        <div class="page-header">
+            <div>
+                <h2>Students</h2>
+                <p>View and manage all students.</p>
+            </div>
+            <button type="button" class="primary-btn add-student-btn">
+                + Add Student
+            </button>
+        </div>
+
+        <div class="students-section">
+            <div class="section-header">
+                <div>
+                    <h2>Student List</h2>
+                    <p>Search, filter and manage students.</p>
+                </div>
+            </div>
+
+            <div class="filters-container">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="studentsSearchInput"
+                        placeholder="Search students...">
+                </div>
+
+                <select id="studentsDepartmentFilter">
+                    <option value="">All Departments</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                </select>
+
+                <select id="studentsGenderFilter">
+                    <option value="">All Genders</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+
+                <select id="studentsYearFilter">
+                    <option value="">All Years</option>
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsPageTableBody">
+                        <tr class="empty-row">
+                            <td colspan="7">No students found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- REPORTS PAGE -->
+
+    <section id="reportsPage" class="page-section">
+        <div class="page-header">
+            <div>
+                <h2>Reports</h2>
+                <p>View detailed student statistics and reports.</p>
+            </div>
+        </div>
+
+        <div class="report-cards">
+            <div class="report-card">
+                <span class="report-card-icon">👨‍🎓</span>
+                <div><p>Total Students</p><strong id="reportTotalStudents">0</strong></div>
+            </div>
+            <div class="report-card">
+                <span class="report-card-icon">👨</span>
+                <div><p>Male Students</p><strong id="reportMaleStudents">0</strong></div>
+            </div>
+            <div class="report-card">
+                <span class="report-card-icon">👩</span>
+                <div><p>Female Students</p><strong id="reportFemaleStudents">0</strong></div>
+            </div>
+            <div class="report-card">
+                <span class="report-card-icon">🏫</span>
+                <div><p>Departments</p><strong id="reportDepartments">0</strong></div>
+            </div>
+        </div>
+
+        <div class="reports-grid">
+            <div class="report-panel">
+                <div class="report-panel-header">
+                    <div>
+                        <h3>Students by Department</h3>
+                        <p>Distribution of students across departments.</p>
+                    </div>
+                    <span class="report-panel-icon">🏫</span>
+                </div>
+                <div id="departmentReport" class="report-list">
+                    <div class="report-empty">No student data available.</div>
+                </div>
+            </div>
+
+            <div class="report-panel">
+                <div class="report-panel-header">
+                    <div>
+                        <h3>Gender Distribution</h3>
+                        <p>Overview of male and female students.</p>
+                    </div>
+                    <span class="report-panel-icon">👥</span>
+                </div>
+                <div id="genderReport" class="report-list">
+                    <div class="report-empty">No student data available.</div>
+                </div>
+            </div>
+
+            <div class="report-panel">
+                <div class="report-panel-header">
+                    <div>
+                        <h3>Students by Year</h3>
+                        <p>Number of students in each academic year.</p>
+                    </div>
+                    <span class="report-panel-icon">🎓</span>
+                </div>
+                <div id="yearReport" class="report-list">
+                    <div class="report-empty">No student data available.</div>
+                </div>
+            </div>
+
+            <div class="report-panel report-info-panel">
+                <div class="report-panel-header">
+                    <div>
+                        <h3>Report Summary</h3>
+                        <p>Current student database overview.</p>
+                    </div>
+                    <span class="report-panel-icon">📊</span>
+                </div>
+
+                <div class="report-summary">
+                    <div class="summary-item">
+                        <span>Total Students</span>
+                        <strong id="summaryTotalStudents">0</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Male Percentage</span>
+                        <strong id="malePercentage">0%</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Female Percentage</span>
+                        <strong id="femalePercentage">0%</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Last Updated</span>
+                        <strong id="reportLastUpdated">--:--</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- USER MANAGEMENT PAGE -->
+
+    <section id="usersPage" class="page-section">
+        <div class="page-header">
+            <div>
+                <h2>User Management</h2>
+                <p>Create and manage system user accounts.</p>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-item">
+                <div>
+                    <h3>👥 Create New User</h3>
+                    <p>Add a new administrator, registrar, or teacher.</p>
+                </div>
+            </div>
+
+            <form id="userForm" class="password-form">
+
+                <div class="form-group">
+                    <label for="newUsername">Username</label>
+                    <input
+                        type="text"
+                        id="newUsername"
+                        placeholder="Enter username"
+                        autocomplete="off"
+                        required
+                    >
+                </div>
+
+                <!-- CORRECTED USER PASSWORD FIELD -->
+
+                <div class="form-group">
+                    <label for="newUserPassword">Password</label>
+                    <input
+                        type="password"
+                        id="newUserPassword"
+                        placeholder="Enter password (minimum 8 characters)"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="newUserRole">User Role</label>
+                    <select id="newUserRole" required>
+                        <option value="">Select user role</option>
+                        <option value="admin">Administrator</option>
+                        <option value="registrar">Registrar</option>
+                        <option value="teacher">Teacher</option>
+                    </select>
+                </div>
+
+                <p id="userMessage" class="password-message"
+                    role="status" aria-live="polite"></p>
+
+                <button type="submit" class="primary-btn">
+                    ➕ Create User
+                </button>
+
+            </form>
+        </div>
+    </section>
+
+
+    <!-- SETTINGS PAGE -->
+
+    <section id="settingsPage" class="page-section">
+        <div class="page-header">
+            <div>
+                <h2>Settings</h2>
+                <p>Manage your application settings.</p>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-item">
+                <div>
+                    <h3>Dark Mode</h3>
+                    <p>Change the application appearance.</p>
+                </div>
+                <button type="button" class="secondary-btn"
+                    id="settingsThemeBtn">Toggle Theme</button>
+            </div>
+
+            <div class="settings-item">
+                <div>
+                    <h3>Student Data</h3>
+                    <p>Student information is stored in your MongoDB database.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHANGE ADMINISTRATOR PASSWORD -->
+
+        <div class="settings-card password-settings-card">
+            <div class="settings-item">
+                <div>
+                    <h3>🔐 Change Administrator Password</h3>
+                    <p>Update your administrator login password securely.</p>
+                </div>
+            </div>
+
+            <form id="changePasswordForm" class="password-form">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword"
+                        placeholder="Enter current password"
+                        autocomplete="current-password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword"
+                        placeholder="Enter new password (at least 8 characters)"
+                        minlength="8" autocomplete="new-password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword"
+                        placeholder="Confirm your new password"
+                        minlength="8" autocomplete="new-password" required>
+                </div>
+
+                <p id="passwordMessage" class="password-message"
+                    role="status" aria-live="polite"></p>
+
+                <button type="submit" class="primary-btn">
+                    🔒 Change Password
+                </button>
+            </form>
+        </div>
+    </section>
+
+</main>
+
+
+<!-- STUDENT MODAL -->
+
+<div class="modal" id="studentModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h2 id="modalTitle">Add Student</h2>
+                <p>Enter student information below.</p>
+            </div>
+            <button type="button" class="close-btn" id="closeModal"
+                aria-label="Close modal">×</button>
+        </div>
+
+        <form id="studentForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="studentId">Student ID</label>
+                    <input type="text" id="studentId"
+                        placeholder="e.g. CS001" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentName">Full Name</label>
+                    <input type="text" id="studentName"
+                        placeholder="Enter full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentGender">Gender</label>
+                    <select id="studentGender" required>
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentEmail">Email</label>
+                    <input type="email" id="studentEmail"
+                        placeholder="student@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentDepartment">Department</label>
+                    <select id="studentDepartment" required>
+                        <option value="">Select department</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Software Engineering">Software Engineering</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentYear">Year</label>
+                    <select id="studentYear" required>
+                        <option value="">Select year</option>
+                        <option value="1">Year 1</option>
+                        <option value="2">Year 2</option>
+                        <option value="3">Year 3</option>
+                        <option value="4">Year 4</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="secondary-btn"
+                    id="cancelModal">Cancel</button>
+                <button type="submit" class="primary-btn">Save Student</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- JAVASCRIPT -->
+
+<script src="script.js"></script>
+
+</body>
+</html>
