@@ -5,6 +5,20 @@
 
 
 // =========================
+// API CONFIGURATION
+// =========================
+
+// Deployed Render backend URL
+const API_BASE_URL =
+    "https://student-management-system-x8kc.onrender.com";
+
+// API endpoints
+const API_URL = `${API_BASE_URL}/api/students`;
+const AUTH_URL = `${API_BASE_URL}/api/auth`;
+const USERS_URL = `${API_BASE_URL}/api/users`;
+
+
+// =========================
 // DOM ELEMENTS
 // =========================
 
@@ -23,14 +37,9 @@ const pages =
 
 
 // =========================
-// API CONFIGURATION
+// APPLICATION DATA
 // =========================
 
-const BACKEND_URL = "https://student-management-system-x8kc.onrender.com";
-
-const API_URL = `${BACKEND_URL}/api/students`;
-const AUTH_URL = `${BACKEND_URL}/api/auth`;
-const USERS_URL = `${BACKEND_URL}/api/users`;
 let authToken = sessionStorage.getItem("smsToken") || "";
 
 let currentUserRole =
@@ -39,6 +48,8 @@ let currentUserRole =
 let students = [];
 
 let editingStudentId = null;
+
+let recentActivities = [];
 
 
 // =========================
@@ -83,15 +94,7 @@ function updateRolePermissions() {
         userPage.style.display =
             isAdmin() ? "" : "none";
     }
-
 }
-
-
-// =========================
-// RECENT ACTIVITY DATA
-// =========================
-
-let recentActivities = [];
 
 
 // =========================
@@ -107,7 +110,8 @@ function addRecentActivity(action, details, icon = "📋") {
         time: new Date().toLocaleString()
     });
 
-    recentActivities = recentActivities.slice(0, 10);
+    recentActivities =
+        recentActivities.slice(0, 10);
 
     renderRecentActivity();
 }
@@ -115,9 +119,8 @@ function addRecentActivity(action, details, icon = "📋") {
 
 function renderRecentActivity() {
 
-    const activityList = document.getElementById(
-        "recentActivityList"
-    );
+    const activityList =
+        document.getElementById("recentActivityList");
 
     if (!activityList) return;
 
@@ -180,7 +183,6 @@ function showLoginPage() {
     if (loginPage) {
         loginPage.style.display = "flex";
     }
-
 }
 
 
@@ -189,7 +191,6 @@ function hideLoginPage() {
     if (loginPage) {
         loginPage.style.display = "none";
     }
-
 }
 
 
@@ -220,7 +221,8 @@ if (loginForm) {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
                 },
 
                 body: JSON.stringify({
@@ -230,28 +232,47 @@ if (loginForm) {
 
             });
 
-            const result = await response.json();
+            let result = {};
+
+            try {
+                result = await response.json();
+            } catch (error) {
+                result = {};
+            }
 
             if (!response.ok || !result.success || !result.token) {
 
                 throw new Error(
-                    result.message || "Invalid username or password."
+                    result.message ||
+                    `Login failed (${response.status}). Please check your credentials.`
                 );
-
             }
 
-            // Save login token and role
+            // Save login token
             authToken = result.token;
 
-            currentUserRole = result.admin?.role || "";
+            // Get user role
+            currentUserRole =
+                result.admin?.role ||
+                result.user?.role ||
+                result.role ||
+                result.data?.role ||
+                "";
 
             if (!currentUserRole) {
+
+                authToken = "";
+
                 throw new Error(
                     "Your account role was not returned. Please contact the administrator."
                 );
             }
 
-            sessionStorage.setItem("smsToken", authToken);
+            // Save session
+            sessionStorage.setItem(
+                "smsToken",
+                authToken
+            );
 
             sessionStorage.setItem(
                 "smsRole",
@@ -281,7 +302,12 @@ if (loginForm) {
             console.error("Login error:", error);
 
             if (loginError) {
-                loginError.textContent = error.message;
+
+                loginError.textContent =
+                    error.message === "Failed to fetch"
+                        ? "Cannot connect to the server. Please check your internet connection and try again."
+                        : error.message;
+
             }
 
         }
@@ -304,7 +330,6 @@ function logout() {
             "The user signed out of the system.",
             "🚪"
         );
-
     }
 
     authToken = "";
@@ -331,7 +356,6 @@ function logout() {
     refreshStudentViews();
 
     showLoginPage();
-
 }
 
 
@@ -355,25 +379,40 @@ if (logoutBtn) {
 
 async function apiRequest(url, options = {}) {
 
-    const response = await fetch(url, {
+    let response;
 
-        ...options,
+    try {
 
-        headers: {
+        response = await fetch(url, {
 
-            "Content-Type": "application/json",
+            ...options,
 
-            ...(authToken
-                ? {
-                    "Authorization": `Bearer ${authToken}`
-                }
-                : {}),
+            headers: {
 
-            ...(options.headers || {})
+                "Content-Type": "application/json",
 
-        }
+                "Accept": "application/json",
 
-    });
+                ...(authToken
+                    ? {
+                        "Authorization": `Bearer ${authToken}`
+                    }
+                    : {}),
+
+                ...(options.headers || {})
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error("Network request failed:", error);
+
+        throw new Error(
+            "Cannot connect to the backend server. Please try again."
+        );
+    }
 
     let result = {};
 
@@ -383,7 +422,7 @@ async function apiRequest(url, options = {}) {
 
     } catch (error) {
 
-        // Empty response.
+        result = {};
 
     }
 
@@ -406,9 +445,9 @@ async function apiRequest(url, options = {}) {
         showLoginPage();
 
         throw new Error(
+            result.message ||
             "Your session has expired. Please log in again."
         );
-
     }
 
     if (!response.ok) {
@@ -417,11 +456,9 @@ async function apiRequest(url, options = {}) {
             result.message ||
             `Request failed (${response.status})`
         );
-
     }
 
     return result;
-
 }
 
 
@@ -440,7 +477,6 @@ async function loadStudents() {
         showLoginPage();
 
         return;
-
     }
 
     try {
@@ -470,9 +506,7 @@ async function loadStudents() {
             );
 
         }
-
     }
-
 }
 
 
@@ -493,7 +527,6 @@ function refreshStudentViews() {
     updateDashboardAnalytics();
 
     updateStudentChart();
-
 }
 
 
@@ -529,7 +562,6 @@ function updateThemeButton() {
         themeBtn.textContent = "🌙";
 
     }
-
 }
 
 
@@ -546,7 +578,6 @@ function toggleDarkMode() {
     );
 
     updateThemeButton();
-
 }
 
 
@@ -599,7 +630,6 @@ function showPage(pageName) {
         );
 
         return;
-
     }
 
     // Hide all pages
@@ -609,7 +639,6 @@ function showPage(pageName) {
 
     });
 
-
     // Remove active status from sidebar links
     navLinks.forEach(link => {
 
@@ -617,13 +646,11 @@ function showPage(pageName) {
 
     });
 
-
     // Find selected page
     const selectedPage =
         document.getElementById(
             `${pageName}Page`
         );
-
 
     // Show selected page
     if (!selectedPage) {
@@ -631,11 +658,9 @@ function showPage(pageName) {
         console.error(`Page not found: ${pageName}Page`);
 
         return;
-
     }
 
     selectedPage.classList.add("active-page");
-
 
     // Highlight selected navigation link
     const selectedLink =
@@ -643,13 +668,11 @@ function showPage(pageName) {
             `.nav-link[data-page="${pageName}"]`
         );
 
-
     if (selectedLink) {
 
         selectedLink.classList.add("active");
 
     }
-
 
     // Update reports
     if (pageName === "reports") {
@@ -658,14 +681,12 @@ function showPage(pageName) {
 
     }
 
-
     // Update dashboard analytics
     if (pageName === "dashboard") {
 
         updateDashboardAnalytics();
 
     }
-
 
     // Close mobile sidebar
     if (
@@ -676,7 +697,6 @@ function showPage(pageName) {
         sidebar.classList.remove("show");
 
     }
-
 }
 
 
@@ -684,7 +704,11 @@ function showPage(pageName) {
 
 document.addEventListener("click", event => {
 
-    const link = event.target.closest("[data-page]");
+    const target = event.target;
+
+    if (!(target instanceof Element)) return;
+
+    const link = target.closest("[data-page]");
 
     if (!link) return;
 
@@ -759,10 +783,15 @@ function openAddStudentModal() {
         );
 
         return;
-
     }
 
-    if (!studentModal || !studentForm) return;
+    if (
+        !studentModal ||
+        !studentForm ||
+        !modalTitle ||
+        !studentId ||
+        !studentName
+    ) return;
 
     editingStudentId = null;
 
@@ -775,7 +804,6 @@ function openAddStudentModal() {
     studentModal.classList.add("show");
 
     studentName.focus();
-
 }
 
 
@@ -793,10 +821,13 @@ function closeStudentModal() {
 
     studentForm.reset();
 
-    studentId.disabled = false;
+    if (studentId) {
+        studentId.disabled = false;
+    }
 
-    modalTitle.textContent = "Add Student";
-
+    if (modalTitle) {
+        modalTitle.textContent = "Add Student";
+    }
 }
 
 
@@ -876,7 +907,6 @@ if (studentForm) {
             );
 
             return;
-
         }
 
         if (!isEditing && !canManageStudents()) {
@@ -886,7 +916,6 @@ if (studentForm) {
             );
 
             return;
-
         }
 
         const id = studentId.value.trim();
@@ -901,7 +930,6 @@ if (studentForm) {
 
         const year = Number(studentYear.value);
 
-
         if (
             !id ||
             !name ||
@@ -914,9 +942,7 @@ if (studentForm) {
             alert("Please fill in all fields.");
 
             return;
-
         }
-
 
         const studentData = {
 
@@ -929,7 +955,6 @@ if (studentForm) {
 
         };
 
-
         try {
 
             if (isEditing) {
@@ -940,7 +965,6 @@ if (studentForm) {
                             student.id === editingStudentId
                     );
 
-
                 if (
                     !studentBeingEdited ||
                     !studentBeingEdited._id
@@ -949,9 +973,7 @@ if (studentForm) {
                     throw new Error(
                         "The student record could not be found in the database."
                     );
-
                 }
-
 
                 await apiRequest(
 
@@ -979,9 +1001,7 @@ if (studentForm) {
 
             }
 
-
             await loadStudents();
-
 
             // Record student activity
             if (isEditing) {
@@ -1002,7 +1022,6 @@ if (studentForm) {
 
             }
 
-
             closeStudentModal();
 
             alert(
@@ -1010,7 +1029,6 @@ if (studentForm) {
                     ? "Student updated successfully."
                     : "Student added successfully."
             );
-
 
         } catch (error) {
 
@@ -1075,7 +1093,6 @@ function filterStudents(
     const searchValue =
         String(search || "").toLowerCase().trim();
 
-
     return students.filter(student => {
 
         const studentIdValue =
@@ -1087,7 +1104,6 @@ function filterStudents(
         const studentEmailValue =
             String(student.email || "").toLowerCase();
 
-
         const matchesSearch =
 
             studentIdValue.includes(searchValue) ||
@@ -1096,21 +1112,17 @@ function filterStudents(
 
             studentEmailValue.includes(searchValue);
 
-
         const matchesDepartment =
             !department ||
             student.department === department;
-
 
         const matchesGender =
             !gender ||
             student.gender === gender;
 
-
         const matchesYear =
             !year ||
             String(student.year) === String(year);
-
 
         return (
             matchesSearch &&
@@ -1239,7 +1251,6 @@ function renderDashboardTable() {
 
     if (!tableBody) return;
 
-
     const filtered = filterStudents(
 
         searchInput ? searchInput.value : "",
@@ -1251,7 +1262,6 @@ function renderDashboardTable() {
         yearFilter ? yearFilter.value : ""
 
     );
-
 
     if (filtered.length === 0) {
 
@@ -1268,9 +1278,7 @@ function renderDashboardTable() {
         `;
 
         return;
-
     }
-
 
     tableBody.innerHTML =
         filtered.map(createStudentRow).join("");
@@ -1288,7 +1296,6 @@ function renderStudentsPageTable() {
         document.getElementById("studentsPageTableBody");
 
     if (!tableBody) return;
-
 
     const filtered = filterStudents(
 
@@ -1310,7 +1317,6 @@ function renderStudentsPageTable() {
 
     );
 
-
     if (filtered.length === 0) {
 
         tableBody.innerHTML = `
@@ -1326,9 +1332,7 @@ function renderStudentsPageTable() {
         `;
 
         return;
-
     }
-
 
     tableBody.innerHTML =
         filtered.map(createStudentRow).join("");
@@ -1355,9 +1359,8 @@ function renderStudents() {
 
 function renderRecentStudents() {
 
-    const tableBody = document.getElementById(
-        "recentStudentsTableBody"
-    );
+    const tableBody =
+        document.getElementById("recentStudentsTableBody");
 
     if (!tableBody) return;
 
@@ -1372,7 +1375,6 @@ function renderRecentStudents() {
         `;
 
         return;
-
     }
 
     const recentStudents = [...students];
@@ -1463,23 +1465,24 @@ function renderRecentStudents() {
 
 document.addEventListener("click", event => {
 
+    const target = event.target;
+
+    if (!(target instanceof Element)) return;
+
     const button =
-        event.target.closest("[data-action]");
+        target.closest("[data-action]");
 
     if (!button) return;
-
 
     const action = button.dataset.action;
 
     const id = button.dataset.id;
-
 
     if (action === "edit") {
 
         editStudent(id);
 
     }
-
 
     if (action === "delete") {
 
@@ -1503,7 +1506,6 @@ function editStudent(id) {
         );
 
         return;
-
     }
 
     const student =
@@ -1511,14 +1513,21 @@ function editStudent(id) {
 
     if (!student) return;
 
-    if (!studentModal || !studentForm) return;
-
+    if (
+        !studentModal ||
+        !studentForm ||
+        !modalTitle ||
+        !studentId ||
+        !studentName ||
+        !studentGender ||
+        !studentEmail ||
+        !studentDepartment ||
+        !studentYear
+    ) return;
 
     editingStudentId = id;
 
-
     modalTitle.textContent = "Edit Student";
-
 
     studentId.value = student.id;
 
@@ -1531,7 +1540,6 @@ function editStudent(id) {
     studentDepartment.value = student.department;
 
     studentYear.value = student.year;
-
 
     studentId.disabled = true;
 
@@ -1555,14 +1563,12 @@ async function deleteStudent(id) {
         );
 
         return;
-
     }
 
     const student =
         students.find(item => item.id === id);
 
     if (!student) return;
-
 
     const confirmed = confirm(
 
@@ -1572,7 +1578,6 @@ async function deleteStudent(id) {
 
     if (!confirmed) return;
 
-
     if (!student._id) {
 
         alert(
@@ -1580,9 +1585,7 @@ async function deleteStudent(id) {
         );
 
         return;
-
     }
-
 
     try {
 
@@ -1596,9 +1599,7 @@ async function deleteStudent(id) {
 
         );
 
-
         await loadStudents();
-
 
         addRecentActivity(
             "Student deleted",
@@ -1606,9 +1607,7 @@ async function deleteStudent(id) {
             "🗑️"
         );
 
-
         alert("Student deleted successfully.");
-
 
     } catch (error) {
 
@@ -1635,24 +1634,20 @@ function updateStatistics() {
 
     const total = students.length;
 
-
     const male =
         students.filter(
             student => student.gender === "Male"
         ).length;
-
 
     const female =
         students.filter(
             student => student.gender === "Female"
         ).length;
 
-
     const departments =
         new Set(
             students.map(student => student.department)
         ).size;
-
 
     const totalElement =
         document.getElementById("totalStudents");
@@ -1665,7 +1660,6 @@ function updateStatistics() {
 
     const departmentElement =
         document.getElementById("totalDepartments");
-
 
     if (totalElement) {
         totalElement.textContent = total;
@@ -1694,30 +1688,25 @@ function updateDashboardAnalytics() {
 
     const total = students.length;
 
-
     const maleCount =
         students.filter(
             student => student.gender === "Male"
         ).length;
-
 
     const femaleCount =
         students.filter(
             student => student.gender === "Female"
         ).length;
 
-
     const malePercentage =
         total > 0
             ? Math.round((maleCount / total) * 100)
             : 0;
 
-
     const femalePercentage =
         total > 0
             ? Math.round((femaleCount / total) * 100)
             : 0;
-
 
     const malePercentageElement =
         document.getElementById("dashboardMalePercentage");
@@ -1730,7 +1719,6 @@ function updateDashboardAnalytics() {
 
     const femaleBar =
         document.getElementById("dashboardFemaleBar");
-
 
     if (malePercentageElement) {
 
@@ -1760,16 +1748,13 @@ function updateDashboardAnalytics() {
 
     }
 
-
     // Department analytics
     const departmentContainer =
         document.getElementById(
             "dashboardDepartmentAnalytics"
         );
 
-
     if (!departmentContainer) return;
-
 
     if (students.length === 0) {
 
@@ -1782,12 +1767,9 @@ function updateDashboardAnalytics() {
         `;
 
         return;
-
     }
 
-
     const departmentCounts = {};
-
 
     students.forEach(student => {
 
@@ -1799,18 +1781,15 @@ function updateDashboardAnalytics() {
 
     });
 
-
     const sortedDepartments =
         Object.entries(departmentCounts).sort(
             (a, b) => b[1] - a[1]
         );
 
-
     const maximum =
         sortedDepartments.length > 0
             ? sortedDepartments[0][1]
             : 1;
-
 
     departmentContainer.innerHTML =
 
@@ -1821,7 +1800,6 @@ function updateDashboardAnalytics() {
 
             const barWidth =
                 Math.round((count / maximum) * 100);
-
 
             return `
 
@@ -1865,36 +1843,30 @@ function updateReports() {
 
     const total = students.length;
 
-
     const male =
         students.filter(
             student => student.gender === "Male"
         ).length;
-
 
     const female =
         students.filter(
             student => student.gender === "Female"
         ).length;
 
-
     const departments =
         new Set(
             students.map(student => student.department)
         ).size;
-
 
     const malePercentage =
         total > 0
             ? Math.round((male / total) * 100)
             : 0;
 
-
     const femalePercentage =
         total > 0
             ? Math.round((female / total) * 100)
             : 0;
-
 
     setText("reportTotalStudents", total);
 
@@ -1910,15 +1882,12 @@ function updateReports() {
 
     setText("femalePercentage", `${femalePercentage}%`);
 
-
     const now = new Date();
-
 
     setText(
         "reportLastUpdated",
         now.toLocaleTimeString()
     );
-
 
     renderDepartmentReport();
 
@@ -1940,7 +1909,6 @@ function renderDepartmentReport() {
 
     if (!container) return;
 
-
     if (students.length === 0) {
 
         container.innerHTML = `
@@ -1952,12 +1920,9 @@ function renderDepartmentReport() {
         `;
 
         return;
-
     }
 
-
     const counts = {};
-
 
     students.forEach(student => {
 
@@ -1969,9 +1934,7 @@ function renderDepartmentReport() {
 
     });
 
-
     const total = students.length;
-
 
     container.innerHTML =
 
@@ -1983,7 +1946,6 @@ function renderDepartmentReport() {
 
                 const percentage =
                     Math.round((count / total) * 100);
-
 
                 return `
 
@@ -2034,7 +1996,6 @@ function renderGenderReport() {
 
     if (!container) return;
 
-
     if (students.length === 0) {
 
         container.innerHTML = `
@@ -2046,24 +2007,19 @@ function renderGenderReport() {
         `;
 
         return;
-
     }
-
 
     const male =
         students.filter(
             student => student.gender === "Male"
         ).length;
 
-
     const female =
         students.filter(
             student => student.gender === "Female"
         ).length;
 
-
     const total = students.length;
-
 
     const genderData = [
 
@@ -2079,14 +2035,12 @@ function renderGenderReport() {
 
     ];
 
-
     container.innerHTML =
 
         genderData.map(item => {
 
             const percentage =
                 Math.round((item.count / total) * 100);
-
 
             return `
 
@@ -2095,7 +2049,7 @@ function renderGenderReport() {
                     <div class="report-row-top">
 
                         <span class="report-row-name">
-                            ${item.name}
+                            ${escapeHTML(item.name)}
                         </span>
 
                         <span class="report-row-value">
@@ -2137,7 +2091,6 @@ function renderYearReport() {
 
     if (!container) return;
 
-
     if (students.length === 0) {
 
         container.innerHTML = `
@@ -2149,12 +2102,9 @@ function renderYearReport() {
         `;
 
         return;
-
     }
 
-
     const total = students.length;
-
 
     const yearCounts = {
 
@@ -2164,7 +2114,6 @@ function renderYearReport() {
         "4": 0
 
     };
-
 
     students.forEach(student => {
 
@@ -2183,7 +2132,6 @@ function renderYearReport() {
 
     });
 
-
     container.innerHTML =
 
         Object.entries(yearCounts)
@@ -2194,7 +2142,6 @@ function renderYearReport() {
                     total > 0
                         ? Math.round((count / total) * 100)
                         : 0;
-
 
                 return `
 
@@ -2260,18 +2207,15 @@ function updateStudentChart() {
 
     const total = students.length;
 
-
     // Total students
     const chartTotal =
         document.getElementById("chartTotalStudents");
-
 
     if (chartTotal) {
 
         chartTotal.textContent = total;
 
     }
-
 
     // Count students by year
     const yearCounts = {
@@ -2282,7 +2226,6 @@ function updateStudentChart() {
         "4": 0
 
     };
-
 
     students.forEach(student => {
 
@@ -2301,14 +2244,12 @@ function updateStudentChart() {
 
     });
 
-
     // Find maximum
     const maximum =
         Math.max(
             ...Object.values(yearCounts),
             1
         );
-
 
     // Update bars
     for (let year = 1; year <= 4; year++) {
@@ -2318,20 +2259,16 @@ function updateStudentChart() {
                 `year${year}Bar`
             );
 
-
         const value =
             document.getElementById(
                 `year${year}Value`
             );
 
-
         const count =
             yearCounts[String(year)];
 
-
         const percentage =
             (count / maximum) * 100;
-
 
         if (bar) {
 
@@ -2339,7 +2276,6 @@ function updateStudentChart() {
                 `${percentage}%`;
 
         }
-
 
         if (value) {
 
@@ -2377,6 +2313,7 @@ if (changePasswordForm) {
         const passwordMessage =
             document.getElementById("passwordMessage");
 
+        if (!passwordMessage) return;
 
         if (newPassword.length < 8) {
 
@@ -2384,9 +2321,7 @@ if (changePasswordForm) {
                 "New password must contain at least 8 characters.";
 
             return;
-
         }
-
 
         if (newPassword !== confirmPassword) {
 
@@ -2394,12 +2329,9 @@ if (changePasswordForm) {
                 "New passwords do not match.";
 
             return;
-
         }
 
-
         passwordMessage.textContent = "Changing password...";
-
 
         try {
 
@@ -2415,15 +2347,12 @@ if (changePasswordForm) {
                 }
             );
 
-
             if (!result || !result.success) {
 
                 throw new Error(
                     result?.message || "Password change failed."
                 );
-
             }
-
 
             alert(
                 "Password changed successfully! Please log in again using your new password."
@@ -2432,7 +2361,6 @@ if (changePasswordForm) {
             changePasswordForm.reset();
 
             logout();
-
 
         } catch (error) {
 
@@ -2450,7 +2378,8 @@ if (changePasswordForm) {
 // USER MANAGEMENT
 // =========================
 
-const userForm = document.getElementById("userForm");
+const userForm =
+    document.getElementById("userForm");
 
 const newUsername =
     document.getElementById("newUsername");
@@ -2474,27 +2403,29 @@ if (userForm) {
         // Only administrators can create users
         if (!isAdmin()) {
 
-            userMessage.textContent =
-                "Only administrators can create user accounts.";
+            if (userMessage) {
 
-            userMessage.style.color = "red";
+                userMessage.textContent =
+                    "Only administrators can create user accounts.";
+
+                userMessage.style.color = "red";
+
+            }
 
             return;
-
         }
 
+        const username = newUsername?.value.trim();
 
-        const username = newUsername.value.trim();
+        const password = newUserPassword?.value;
 
-        const password = newUserPassword.value;
+        const role = newUserRole?.value;
 
-        const role = newUserRole.value;
-
+        if (!userMessage) return;
 
         userMessage.textContent = "";
 
         userMessage.style.color = "";
-
 
         if (!username || !password || !role) {
 
@@ -2504,9 +2435,7 @@ if (userForm) {
             userMessage.style.color = "red";
 
             return;
-
         }
-
 
         try {
 
@@ -2522,7 +2451,6 @@ if (userForm) {
                 }
             );
 
-
             userMessage.textContent =
                 response.message || "User created successfully.";
 
@@ -2530,13 +2458,11 @@ if (userForm) {
 
             userForm.reset();
 
-
             addRecentActivity(
                 "New user created",
                 `Account ${username} was created with the ${role} role.`,
                 "👤"
             );
-
 
         } catch (error) {
 
