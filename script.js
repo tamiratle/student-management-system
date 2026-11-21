@@ -26,10 +26,11 @@ const pages =
 // API CONFIGURATION
 // =========================
 
-const API_URL = "http://localhost:5000/api/students";
-const AUTH_URL = "http://localhost:5000/api/auth";
-const USERS_URL = "http://localhost:5000/api/users";
+const BACKEND_URL = "https://student-management-system-x8kc.onrender.com";
 
+const API_URL = `${BACKEND_URL}/api/students`;
+const AUTH_URL = `${BACKEND_URL}/api/auth`;
+const USERS_URL = `${BACKEND_URL}/api/users`;
 let authToken = sessionStorage.getItem("smsToken") || "";
 
 let currentUserRole =
